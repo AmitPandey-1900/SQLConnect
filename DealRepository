@@ -1,0 +1,43 @@
+package com.example.demo.repository;
+
+import com.example.demo.entity.Deal;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
+import org.springframework.stereotype.Repository;
+
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.time.LocalDateTime;
+import java.util.List;
+
+@Repository
+public class DealRepository {
+
+    private final JdbcTemplate jdbcTemplate;
+
+    public DealRepository(JdbcTemplate jdbcTemplate) {
+        this.jdbcTemplate = jdbcTemplate;
+    }
+
+    // Query to fetch deals within the given date range
+    public List<Deal> findByDealDateBetween(LocalDateTime startDate, LocalDateTime endDate) {
+        String sql = "SELECT id, deal_type, deal_date, desk, venue, participants FROM Deal " +
+                     "WHERE deal_date BETWEEN ? AND ?";
+        return jdbcTemplate.query(sql, new Object[]{startDate, endDate}, new DealRowMapper());
+    }
+
+    // RowMapper to map SQL result to Deal object
+    private static class DealRowMapper implements RowMapper<Deal> {
+        @Override
+        public Deal mapRow(ResultSet rs, int rowNum) throws SQLException {
+            Deal deal = new Deal();
+            deal.setId(rs.getLong("id"));
+            deal.setDealType(rs.getString("deal_type"));
+            deal.setDealDate(rs.getTimestamp("deal_date").toLocalDateTime());
+            deal.setDesk(rs.getString("desk"));
+            deal.setVenue(rs.getString("venue"));
+            deal.setParticipants(rs.getString("participants"));
+            return deal;
+        }
+    }
+}
