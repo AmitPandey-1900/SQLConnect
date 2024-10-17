@@ -1,0 +1,62 @@
+package com.example.demo.repository;
+
+import com.example.demo.entity.Deal;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
+
+import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
+
+class DealRepositoryTest {
+
+    @Mock
+    private JdbcTemplate jdbcTemplate;
+
+    @InjectMocks
+    private DealRepository dealRepository;
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);  // Initialize mocks
+    }
+
+    @Test
+    void testFindByDealDateBetween() {
+        // Given
+        LocalDateTime startDate = LocalDateTime.of(2024, 10, 16, 9, 0);
+        LocalDateTime endDate = LocalDateTime.of(2024, 10, 16, 11, 0);
+
+        // Mocked result from database
+        Deal mockDeal = new Deal();
+        mockDeal.setId(1L);
+        mockDeal.setDealType("type1");
+        mockDeal.setDealDate(LocalDateTime.of(2024, 10, 16, 9, 30));
+        mockDeal.setDesk("desk1");
+        mockDeal.setVenue("venue1");
+        mockDeal.setParticipants("participant1");
+
+        List<Deal> mockDeals = Arrays.asList(mockDeal);
+
+        // When the query is executed, return the mock result
+        when(jdbcTemplate.query(any(String.class), any(Object[].class), any(RowMapper.class)))
+                .thenReturn(mockDeals);
+
+        // When
+        List<Deal> result = dealRepository.findByDealDateBetween(startDate, endDate);
+
+        // Then
+        assertEquals(1, result.size());
+        assertEquals("type1", result.get(0).getDealType());
+        assertEquals("desk1", result.get(0).getDesk());
+    }
+}
