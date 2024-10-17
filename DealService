@@ -1,0 +1,32 @@
+package com.example.demo.service;
+
+import com.example.demo.entity.Deal;
+import com.example.demo.repository.DealRepository;
+import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+@Service
+public class DealService {
+
+    private final DealRepository dealRepository;
+
+    public DealService(DealRepository dealRepository) {
+        this.dealRepository = dealRepository;
+    }
+
+    public Map<LocalDateTime, List<Deal>> getDealsBucketedBy30Minutes(LocalDateTime startDate, LocalDateTime endDate) {
+        List<Deal> deals = dealRepository.findByDealDateBetween(startDate, endDate);
+
+        // Group the deals into 30-minute buckets
+        return deals.stream().collect(Collectors.groupingBy(deal -> {
+            LocalDateTime dealDate = deal.getDealDate();
+            long minutes = dealDate.truncatedTo(ChronoUnit.HOURS).until(dealDate, ChronoUnit.MINUTES);
+            return dealDate.minusMinutes(minutes % 30); // Bucketing into 30-minute windows
+        }));
+    }
+}
